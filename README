@@ -1,3 +1,6 @@
+Lab 3 Specs:
+tinyurl.com/ACA-Lab3
+
 For Part A, your job is simply to create the functionality for the three objects: RAT, REST, and ROB.
 
 We have provided the *.h files, which should remain unmodified.  You should simply fill the desired functions in each *.cpp files and compile the file as an independent object file, using the following command:
