@@ -47,7 +47,7 @@ void REST_print_state(REST *t){
 // If space return true else return false
 /////////////////////////////////////////////////////////////
 
-bool  REST_check_space(REST *t){
+bool REST_check_space(REST *t){
     int i = 0;
     // Iterate through all REST entries
     for(i; i < NUM_REST_ENTRIES; i++)
