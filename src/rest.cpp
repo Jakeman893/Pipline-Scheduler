@@ -2,6 +2,7 @@
 #include <assert.h>
 
 #include "rest.h"
+#define READY_SRC_TAG -1
 
 extern int32_t NUM_REST_ENTRIES;
 

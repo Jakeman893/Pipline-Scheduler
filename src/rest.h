@@ -6,7 +6,6 @@
 #include "trace.h"
 
 #define MAX_REST_ENTRIES 256
-#define READY_SRC_TAG -1
 
 // Reservation Station
 
