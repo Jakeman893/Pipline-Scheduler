@@ -7,18 +7,24 @@
 
 #define MAX_REST_ENTRIES 256
 
+// Reservation Station
 
+// Reservation Station Entry
 typedef struct REST_Entry_Struct {
-  bool      valid;
-  bool      scheduled;
-  Inst_Info inst;
+    // Valid bit for entry
+    bool valid;
+    // Scheduled bit for entry
+    bool scheduled;
+    // Instruction Information Record
+    Inst_Info inst;
 } REST_Entry;
 
 /////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
 
 typedef struct REST {
-  REST_Entry  REST_Entries[MAX_REST_ENTRIES];
+    // The actual REST table 
+    REST_Entry  REST_Entries[MAX_REST_ENTRIES];
 } REST;
 
 /////////////////////////////////////////////////////////////

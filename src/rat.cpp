@@ -40,7 +40,14 @@ void RAT_print_state(RAT *t){
 /////////////////////////////////////////////////////////////
 
 int  RAT_get_remap(RAT *t, int arf_id){
-
+    // Retrieve entry from RAT
+    const RAT_Entry entry = t->RAT_Entries[arf_id];
+    // If valid bit not set, just return arf_id
+    if(!entry.valid)
+        return arf_id;
+    // If valid bit was set, return the physical id from the RAT 
+    else
+        return entry.prf_id;
 }
 
 /////////////////////////////////////////////////////////////
@@ -48,7 +55,12 @@ int  RAT_get_remap(RAT *t, int arf_id){
 /////////////////////////////////////////////////////////////
 
 void RAT_set_remap(RAT *t, int arf_id, int prf_id){
-
+    // Retrieve entry from RAT
+    RAT_Entry* entry = &t->RAT_Entries[arf_id];
+    // Update with passed in physical register file id and
+    // and set as valid. 
+    entry->prf_id = prf_id;
+    entry->valid = true;
 }
 
 /////////////////////////////////////////////////////////////
@@ -56,7 +68,11 @@ void RAT_set_remap(RAT *t, int arf_id, int prf_id){
 /////////////////////////////////////////////////////////////
 
 void RAT_reset_entry(RAT *t, int arf_id){
-
+    // Retrieve entry
+    RAT_Entry* entry = &t->RAT_Entries[arf_id];
+    // Reset entry to default state
+    entry->prf_id = 0;
+    entry->valid = false;
 }
 
 
