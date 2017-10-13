@@ -32,10 +32,64 @@
 #include "gtest/gtest.h"
 #include "../../src/rat.h"
 
-// Test linkage
-TEST(RatTest, AddInput) {
+// Test That making instance works correctly
+TEST(RatTest, MakeInstance) {
     RAT *rat = RAT_init();
-    EXPECT_EQ(1, RAT_get_remap(rat, 1));
+    EXPECT_FALSE(rat == NULL);
+    delete rat;
+}
+
+// Test that when retrieving from empty RAT,
+//  the retrieved value is equal to value given
+TEST(RatTest, RetrieveEmptyRat) {
+    RAT *rat = RAT_init();
+    int reg = RAT_get_remap(rat, 1);
+    EXPECT_EQ(reg, 1);
+    delete rat;
+}
+
+// Test that when RAT has value set, the RAT returns
+//  mapped register.
+TEST(RatTest, SetRatEntry) {
+    RAT *rat = RAT_init();
+    RAT_set_remap(rat, 1, 5);
+    int reg = RAT_get_remap(rat, 1);
+    EXPECT_EQ(reg, 5);
+    delete rat;
+}
+
+// Test that when RAT has value reset, the RAT returns
+//  the passed value
+TEST(RatTest, ResetRatEntry) {
+    RAT *rat = RAT_init();
+    RAT_set_remap(rat, 1, 5);
+    int reg = RAT_get_remap(rat, 1);
+    EXPECT_EQ(reg, 5);
+    RAT_reset_entry(rat, 1);
+    reg = RAT_get_remap(rat, 1);
+    EXPECT_EQ(reg, 1);
+}
+
+// Test when all values set in RAT, all valid bits true
+TEST(RatTest, ValidBitTest) {
+    RAT *rat = RAT_init();
+    int i = 0;
+    for(;i < MAX_ARF_REGS;i++)
+    {
+        RAT_set_remap(rat, i, i * 5);
+        EXPECT_TRUE(rat->RAT_Entries[i].valid);
+    }
+}
+
+// Test that prf_id is set when remapping
+TEST(RatTest, PRFTest) {
+    RAT *rat = RAT_init();
+    int i = 0;
+    for(;i < MAX_ARF_REGS;i++)
+    {
+        RAT_set_remap(rat, i, i * 5);
+        EXPECT_EQ(rat->RAT_Entries[i].prf_id, i * 5);
+    }
 }
 
 GTEST_API_ int main(int argc, char **argv) {

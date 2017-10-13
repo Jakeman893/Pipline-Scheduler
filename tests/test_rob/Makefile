@@ -4,14 +4,14 @@ A_HEAD = rob.h
 A_OBJS = $(A_SRC_LOC:.cpp=.o)
 A_SRC_LOC = $(addprefix $(SRC_DIR), $(A_SRC))
 
-all: $(A_SRC_LOC) rob_unittest
+all: $(A_SRC_LOC) rob.unittest
 
 %.o: %.cpp
 	g++ -Wall -c -o $@ $<
 
-rob_unittest: $(A_OBJS) ../../src/rob.h
+rob.unittest: $(A_OBJS) ../../src/rob.h
 	g++ rob_unittest.cpp -lgtest -lgtest_main -lpthread $^ -o $@
 
 clean:
 	rm $(A_OBJS)
-	rm rob_unittest
+	rm rob.unittest
