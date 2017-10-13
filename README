@@ -10,3 +10,37 @@ g++ -c rest.cpp -o rest.o
 g++ -c rob.cpp -o rob.o
 
 Since you have no way of debugging these files just yet, tou will be graded for Part A for simply submitting the cpp files.  
+
+
+To run tests pull the Google Test submodule and build
+
+$ cd tests/googletest/googletest
+$ mkdir build
+$ mkdir /path/to/install
+$ mkdir /path/to/install/include
+$ mkdir /path/to/install/lib
+$ cd build
+$ cmake -DBUILD_SHARED_LIBS=ON -Dgtest_build_samples=ON -G "Unix Makefiles" ..
+$ make
+$ cp -r ../include/gtest /path/to/install/include/
+$ cp lib*.so /path/to/install/lib
+
+To ensure it was installed correctly, create test.cpp with these contents:
+
+    #include <gtest/gtest.h>
+    TEST(MathTest, TwoPlusTwoEqualsFour) {
+        EXPECT_EQ(2 + 2, 4);
+    }
+
+    int main(int argc, char **argv) {
+        ::testing::InitGoogleTest( &argc, argv );
+        return RUN_ALL_TESTS();
+    }
+
+and run with the following commands
+
+$ export GTEST_HOME=/path/to/install/
+$ export LD_LIBRARY_PATH=$GTEST_HOME/lib:$LD_LIBRARY_PATH
+$ g++ test.cpp -I $GTEST_HOME/include -L $GTEST_HOME/lib -lgtest -lgtest_main -lpthread 
+
+if this compiles and runs, congrats! You're ready to run the tests.
