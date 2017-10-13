@@ -30,9 +30,15 @@
 #include <stdio.h>
 
 #include "gtest/gtest.h"
+#include "../../src/rat.h"
+
+// Test linkage
+TEST(RatTest, AddInput) {
+    RAT *rat = RAT_init();
+    EXPECT_EQ(1, RAT_get_remap(rat, 1));
+}
 
 GTEST_API_ int main(int argc, char **argv) {
-  printf("Running main() from gtest_main.cc\n");
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
