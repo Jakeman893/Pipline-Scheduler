@@ -78,15 +78,15 @@ int ROB_insert(ROB *t, Inst_Info inst){
 
 void ROB_mark_ready(ROB *t, Inst_Info inst){
     // Iterate through table starting at head_ptr
-    int i = 0;
-    int idx;
+    int i = 1;
+    int idx = NUM_ROB_ENTRIES;
     ROB_Entry *entry = NULL;
-    for(; i != t->tail_ptr; i++)
+    for(; idx != t->tail_ptr; i++)
     {
         idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
         entry = &t->ROB_Entries[idx];
         // match inst_num with an entry
-        if(entry->inst.inst_num == inst.inst_num)
+        if(entry->inst.inst_num == inst.inst_num && entry->valid)
             entry->ready = true;
     }
 }
@@ -128,6 +128,8 @@ bool ROB_check_head(ROB *t){
 Inst_Info ROB_remove_head(ROB *t){
     ROB_Entry* first = &t->ROB_Entries[t->head_ptr];
     Inst_Info ret = first->inst;
+    first->valid = false;
+    first->ready = false;
     t->head_ptr = (1 + t->head_ptr) % NUM_ROB_ENTRIES;
     return ret;
 }
