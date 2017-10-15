@@ -67,7 +67,9 @@ int ROB_insert(ROB *t, Inst_Info inst){
     entry->ready = false;
 
     // Increment tail, wrapping if necessary
-    t->tail_ptr = ++t->tail_ptr % NUM_ROB_ENTRIES;
+    ++t->tail_ptr;
+    t->tail_ptr %= NUM_ROB_ENTRIES;
+    return 1;
 }
 
 /////////////////////////////////////////////////////////////
@@ -79,7 +81,7 @@ void ROB_mark_ready(ROB *t, Inst_Info inst){
     int i = 0;
     int idx;
     ROB_Entry *entry = NULL;
-    for(i; i != t->tail_ptr; i++)
+    for(; i != t->tail_ptr; i++)
     {
         idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
         entry = &t->ROB_Entries[idx];
@@ -98,7 +100,7 @@ bool ROB_check_ready(ROB *t, int tag){
     int i = 0;
     int idx;
     ROB_Entry *entry = NULL;
-    for(i; i != t->tail_ptr; i++)
+    for(; i != t->tail_ptr; i++)
     {
         idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
         entry = &t->ROB_Entries[idx];
@@ -106,6 +108,7 @@ bool ROB_check_ready(ROB *t, int tag){
         if(entry->inst.src1_tag == tag || entry->inst.src2_tag == tag)
             return entry->ready;
     }
+    return false;
 }
 
 

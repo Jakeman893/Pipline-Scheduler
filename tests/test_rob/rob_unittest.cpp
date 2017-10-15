@@ -31,11 +31,51 @@
 
 #include "gtest/gtest.h"
 #include "../../src/rob.h"
+#include "../../src/trace.h"
 
 int32_t   NUM_ROB_ENTRIES=32;
 
-// Test linkage
-TEST(RobTest, AddInput) {
+// Test ROB initialization
+TEST(RobTest, InitRob) {
+    ROB* rob = ROB_init();
+    EXPECT_FALSE(rob == NULL);
+    delete rob;
+}
+
+// Test ROB empty check
+TEST(RobTest, EmptyRobCheck) {
+    ROB* rob = ROB_init();
+    EXPECT_TRUE(ROB_check_space(rob));
+    delete rob;
+}
+
+// Test ROB single insertion
+TEST(RobTest, SingleInsert) {
+    ROB* rob = ROB_init();
+    Inst_Info mockInst;
+    mockInst.inst_num = 0;
+    ROB_insert(rob, mockInst);
+    EXPECT_TRUE(rob->ROB_Entries[rob->head_ptr].valid);
+    EXPECT_EQ(rob->ROB_Entries[rob->head_ptr].inst.inst_num, 0);
+    delete rob;
+}
+
+// Test full insert
+TEST(RobTest, InsertInst) {
+    ROB* rob = ROB_init();
+    Inst_Info mockInst;
+    printf("\n\n\n%d\n\n\n", -1 % 5);
+    for(int i = 0; i < NUM_ROB_ENTRIES; i++)
+    {
+        mockInst.inst_num = i;
+        ROB_insert(rob, mockInst);
+        int prev_entry = int(rob->tail_ptr) - 1;
+        prev_entry = prev_entry % NUM_ROB_ENTRIES;
+        EXPECT_TRUE(rob->ROB_Entries[prev_entry].valid);
+        EXPECT_EQ(rob->ROB_Entries[prev_entry].inst.inst_num, i);
+        EXPECT_EQ(prev_entry, i);
+        ++mockInst.inst_num;
+    }
 }
 
 GTEST_API_ int main(int argc, char **argv) {
