@@ -272,14 +272,39 @@ void pipe_cycle_exe(Pipeline *p){
  **********************************************************************/
 
 void pipe_cycle_rename(Pipeline *p){
+    int i;
+    // Iterate over all entries in pipe_width
+    for(i = 0; i < PIPE_WIDTH; i++) {
+        Pipe_Latch* latch = &p->ID_latch[i];
+        // TODO: If src1/src2 is remapped set src1tag, src2tag
+        latch->inst.src1_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src1_reg);
+        latch->inst.src2_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src2_reg);
 
-  // TODO: If src1/src2 is remapped set src1tag, src2tag
-  // TODO: Find space in ROB and set drtag as such if successful
-  // TODO: Find space in REST and transfer this inst (valid=1, sched=0)
-  // TODO: If src1/src2 is not remapped marked as src ready
-  // TODO: If src1/src2 remapped and the ROB (tag) is ready then mark src ready
-  // FIXME: If there is stall, we should not do rename and ROB alloc twice
 
+        if(ROB_check_space(p->pipe_ROB) && REST_check_space(p->pipe_REST))
+        {
+            // TODO: Find space in ROB and set drtag as such if successful
+            int res = ROB_insert(p->pipe_ROB, latch->inst);
+            latch->inst.dr_tag = res;
+            RAT_set_remap(p->pipe_RAT, latch->inst.dest_reg, res);
+            REST_insert(p->pipe_REST, latch->inst);           
+        } else {
+            p->ID_latch[i].stall = true;
+            continue;
+        }
+
+        // TODO: If src1/src2 is not remapped marked as src ready
+        if(latch->inst.src1_tag == -1)
+            latch->inst.src1_ready = true;
+        if(latch->inst.src2_tag == -1)
+            latch->inst.src2_ready = true;
+        // TODO: If src1/src2 remapped and the ROB (tag) is ready then mark src ready
+        if(ROB_check_ready(p->pipe_ROB, latch->inst.src1_tag))
+            latch->inst.src1_ready = true;
+        if(ROB_check_ready(p->pipe_ROB, latch->inst.src2_tag))
+            latch->inst.src2_ready = true;
+        // FIXME: If there is stall, we should not do rename and ROB alloc twice
+    }
 }
 
 //--------------------------------------------------------------------//

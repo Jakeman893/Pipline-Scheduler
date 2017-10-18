@@ -77,6 +77,7 @@ TEST(RobTest, InsertAlltInst) {
         ++mockInst.inst_num;
     }
     EXPECT_FALSE(ROB_check_space(rob));
+    delete rob;
 }
 
 // Fill the ROB and remove all
@@ -86,10 +87,7 @@ TEST(RobTest, AddAllAndRemove) {
     for(int i = 0; i < NUM_ROB_ENTRIES; i++)
     {
         mockInst.inst_num = i;
-        ROB_insert(rob, mockInst);
-        int prev_entry = int(rob->tail_ptr) - 1;
-        if(prev_entry < 0)
-            prev_entry += NUM_ROB_ENTRIES;
+        int prev_entry = ROB_insert(rob, mockInst);
         EXPECT_TRUE(rob->ROB_Entries[prev_entry].valid);
         EXPECT_EQ(rob->ROB_Entries[prev_entry].inst.inst_num, i);
         EXPECT_EQ(prev_entry, i);
@@ -105,6 +103,7 @@ TEST(RobTest, AddAllAndRemove) {
     }
     EXPECT_EQ(rob->head_ptr, rob->tail_ptr);
     EXPECT_TRUE(ROB_check_space(rob));
+    delete rob;
 }
 
 // Test mark instruction as ready
@@ -130,6 +129,35 @@ TEST(RobTest, MarkReady) {
     // ROB_print_state(rob);
     EXPECT_TRUE(rob->ROB_Entries[5].valid);
     EXPECT_TRUE(rob->ROB_Entries[5].ready);
+    delete rob;
+}
+
+// Fill the ROB and remove all
+TEST(RobTest, AddAllAndOneMore) {
+    ROB* rob = ROB_init();
+    Inst_Info mockInst;
+    for(int i = 0; i < NUM_ROB_ENTRIES; i++)
+    {
+        mockInst.inst_num = i;
+        int prev_entry = ROB_insert(rob, mockInst);
+        EXPECT_TRUE(rob->ROB_Entries[prev_entry].valid);
+        EXPECT_EQ(rob->ROB_Entries[prev_entry].inst.inst_num, i);
+        EXPECT_EQ(prev_entry, i);
+        ++mockInst.inst_num;
+    }
+    EXPECT_FALSE(ROB_check_space(rob));
+    ++mockInst.inst_num;
+    EXPECT_EQ(ROB_insert(rob, mockInst), -1);
+    for(int i = 0; i < NUM_ROB_ENTRIES; i++)
+    {
+        mockInst = ROB_remove_head(rob);
+        EXPECT_EQ(mockInst.inst_num, i);
+        EXPECT_FALSE(rob->ROB_Entries[rob->head_ptr - 1].valid);
+        EXPECT_FALSE(rob->ROB_Entries[rob->head_ptr - 1].ready);
+    }
+    EXPECT_EQ(rob->head_ptr, rob->tail_ptr);
+    EXPECT_TRUE(ROB_check_space(rob));
+    delete rob;
 }
 
 GTEST_API_ int main(int argc, char **argv) {

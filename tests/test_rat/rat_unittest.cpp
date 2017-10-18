@@ -44,7 +44,7 @@ TEST(RatTest, MakeInstance) {
 TEST(RatTest, RetrieveEmptyRat) {
     RAT *rat = RAT_init();
     int reg = RAT_get_remap(rat, 1);
-    EXPECT_EQ(reg, 1);
+    EXPECT_EQ(-1, reg);
     delete rat;
 }
 
@@ -67,7 +67,7 @@ TEST(RatTest, ResetRatEntry) {
     EXPECT_EQ(reg, 5);
     RAT_reset_entry(rat, 1);
     reg = RAT_get_remap(rat, 1);
-    EXPECT_EQ(reg, 1);
+    EXPECT_EQ(-1, reg);
 }
 
 // Test when all values set in RAT, all valid bits true

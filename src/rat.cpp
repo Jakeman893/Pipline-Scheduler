@@ -42,9 +42,9 @@ void RAT_print_state(RAT *t){
 int  RAT_get_remap(RAT *t, int arf_id){
     // Retrieve entry from RAT
     const RAT_Entry entry = t->RAT_Entries[arf_id];
-    // If valid bit not set, just return arf_id
+    // If valid bit not set, return -1 to indicate failure
     if(!entry.valid)
-        return arf_id;
+        return -1;
     // If valid bit was set, return the physical id from the RAT 
     else
         return entry.prf_id;

@@ -58,7 +58,7 @@ bool ROB_check_space(ROB *t){
 int ROB_insert(ROB *t, Inst_Info inst){
     // Check if space available
     if(!ROB_check_space(t))
-        return 0;
+        return -1;
 
     // Insert at tail
     ROB_Entry *entry = &t->ROB_Entries[t->tail_ptr];
@@ -66,10 +66,12 @@ int ROB_insert(ROB *t, Inst_Info inst){
     entry->valid = true;
     entry->ready = false;
 
+    // Save the current index to return
+    int idx = t->tail_ptr;
     // Increment tail, wrapping if necessary
     ++t->tail_ptr;
     t->tail_ptr %= NUM_ROB_ENTRIES;
-    return 1;
+    return idx;
 }
 
 /////////////////////////////////////////////////////////////
@@ -105,7 +107,7 @@ bool ROB_check_ready(ROB *t, int tag){
         idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
         entry = &t->ROB_Entries[idx];
         // Match tag with an entry
-        if(entry->inst.src1_tag == tag || entry->inst.src2_tag == tag)
+        if(entry->inst.dr_tag == tag)
             return entry->ready;
     }
     return false;
