@@ -311,19 +311,49 @@ void pipe_cycle_rename(Pipeline *p){
 
 void pipe_cycle_schedule(Pipeline *p){
 
-  // TODO: Implement two scheduling policies (SCHED_POLICY: 0 and 1)
+    // TODO: Implement two scheduling policies (SCHED_POLICY: 0 and 1)
+    for(int j = 0; j < PIPE_WIDTH; j++) {
+        REST_Entry* tmp;
+        uint64_t min_inst_num = 0xFFFF;
+        REST_Entry* choose = NULL;
+        if(SCHED_POLICY==0){
+            // inorder scheduling
+            // Find all valid entries, if oldest is stalled then stop
+            // Get minimum instruction
+            for(int i = 0; i < MAX_REST_ENTRIES; i++) {
+                tmp = &p->pipe_REST->REST_Entries[i];
+                if(tmp->valid && !tmp->scheduled && tmp->inst.inst_num < min_inst_num) {
+                    min_inst_num = tmp->inst.inst_num;
+                    choose = tmp;
+                }
+            }
+        }
 
-  if(SCHED_POLICY==0){
-    // inorder scheduling
-    // Find all valid entries, if oldest is stalled then stop
-    // Else send it out and mark it as scheduled
-  }
+        if(SCHED_POLICY==1){
+            // out of order scheduling
+            // Find valid/unscheduled/src1ready/src2ready entries in REST
+            // Iterate through REST finding oldest ready entries in REST
+            for(int i = 0; i < MAX_REST_ENTRIES; i++) {
+                tmp = &p->pipe_REST->REST_Entries[i];
+                // Get entry to schedule when older, not scheduled, valid, src1 ready, src2 ready
+                if(tmp->valid && !tmp->scheduled && tmp->inst.src1_ready && tmp->inst.src2_ready && tmp->inst.inst_num < min_inst_num) {
+                    min_inst_num = tmp->inst.inst_num;
+                    choose = tmp;
+                }
+            }
+        }
 
-  if(SCHED_POLICY==1){
-    // out of order scheduling
-    // Find valid/unscheduled/src1ready/src2ready entries in REST
-    // Transfer them to SC_latch and mark that REST entry as scheduled
-  }
+        if(choose) {
+            REST_schedule(p->pipe_REST, choose->inst);
+            // Else send it out and mark it as scheduled
+            p->SC_latch[j].inst = choose->inst;
+            p->SC_latch[j].stall = !choose->scheduled;
+            p->SC_latch[j].valid = choose->scheduled;
+        } else {
+            p->SC_latch[j].valid = false;
+            p->SC_latch[j].stall = true;
+        }
+    }
 }
 
 
