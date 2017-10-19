@@ -127,6 +127,7 @@ TEST(RobTest, MarkReady) {
     mockInst.inst_num = 5;
     ROB_mark_ready(rob, mockInst);
     // ROB_print_state(rob);
+    EXPECT_EQ(rob->ROB_Entries[5].inst.inst_num, mockInst.inst_num);
     EXPECT_TRUE(rob->ROB_Entries[5].valid);
     EXPECT_TRUE(rob->ROB_Entries[5].ready);
     delete rob;

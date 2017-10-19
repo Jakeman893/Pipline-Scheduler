@@ -79,14 +79,12 @@ int ROB_insert(ROB *t, Inst_Info inst){
 /////////////////////////////////////////////////////////////
 
 void ROB_mark_ready(ROB *t, Inst_Info inst){
-    // Iterate through table starting at head_ptr
-    int i = 1;
-    int idx = NUM_ROB_ENTRIES;
+    // Iterate through table starting at 0
+    int i = 0;
     ROB_Entry *entry = NULL;
-    for(; idx != t->tail_ptr; i++)
+    for(; i <= NUM_ROB_ENTRIES; i++)
     {
-        idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
-        entry = &t->ROB_Entries[idx];
+        entry = &t->ROB_Entries[i];
         // match inst_num with an entry
         if(entry->inst.inst_num == inst.inst_num && entry->valid)
             entry->ready = true;
@@ -100,14 +98,12 @@ void ROB_mark_ready(ROB *t, Inst_Info inst){
 bool ROB_check_ready(ROB *t, int tag){
     // look for tag in ROB and return if th ROB entry is ready
     int i = 0;
-    int idx;
     ROB_Entry *entry = NULL;
-    for(; i != t->tail_ptr; i++)
+    for(; i <= NUM_ROB_ENTRIES; i++)
     {
-        idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
-        entry = &t->ROB_Entries[idx];
+        entry = &t->ROB_Entries[i];
         // Match tag with an entry
-        if(entry->inst.dr_tag == tag)
+        if(entry->inst.dr_tag == tag && entry->valid)
             return entry->ready;
     }
     return false;

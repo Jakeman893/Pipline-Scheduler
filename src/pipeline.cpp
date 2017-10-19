@@ -360,12 +360,21 @@ void pipe_cycle_schedule(Pipeline *p){
 //--------------------------------------------------------------------//
 
 void pipe_cycle_broadcast(Pipeline *p){
-
-  // TODO: Go through all instructions out of EXE latch
-  // TODO: Broadcast it to REST (using wakeup function)
-  // TODO: Remove entry from REST (using inst_num)
-  // TODO: Update the ROB, mark ready, and update Inst Info in ROB
- 
+    for(int j = 0; j < PIPE_WIDTH; j++) {
+        // TODO: Go through all instructions out of EXE latch
+        for(int i = 0; i < MAX_BROADCASTS; i++) {
+            Pipe_Latch* latched = &p->EX_latch[i];
+            if(latched->valid)
+            {
+                // TODO: Broadcast it to REST (using wakeup function)
+                REST_wakeup(p->pipe_REST, latched->inst.dr_tag);
+                // TODO: Remove entry from REST (using inst_num)
+                REST_remove(p->pipe_REST, latched->inst);
+                // TODO: Update the ROB, mark ready, and update Inst Info in ROB
+                ROB_mark_ready(p->pipe_ROB, latched->inst);
+            }
+        }
+    }
 }
 
 
@@ -373,23 +382,23 @@ void pipe_cycle_broadcast(Pipeline *p){
 
 
 void pipe_cycle_commit(Pipeline *p) {
-  int ii = 0;
+    int ii = 0;
 
-  // TODO: check the head of the ROB. If ready commit (update stats)
-  // TODO: Deallocate entry from ROB
-  // TODO: Update RAT after checking if the mapping is still valid
+    // TODO: check the head of the ROB. If ready commit (update stats)
+    // TODO: Deallocate entry from ROB
+    // TODO: Update RAT after checking if the mapping is still valid
 
-  // DUMMY CODE (for compiling, and ensuring simulation terminates!)
-  for(ii=0; ii<PIPE_WIDTH; ii++){
-    if(p->FE_latch[ii].valid){
-      if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
-        p->halt=true;
-      }else{
-	p->stat_retired_inst++;
-	p->FE_latch[ii].valid=false;
-      }
+    // DUMMY CODE (for compiling, and ensuring simulation terminates!)
+    for(ii=0; ii<PIPE_WIDTH; ii++){
+        if(p->FE_latch[ii].valid){
+            if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
+                p->halt=true;
+            }else{
+                p->stat_retired_inst++;
+                p->FE_latch[ii].valid=false;
+            }
+        }
     }
-  }
 }
   
 //--------------------------------------------------------------------//

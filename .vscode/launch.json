@@ -6,7 +6,7 @@
             "name": "C++ Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "../tests/test_schedule/schedule.unittest",
+            "program": "../tests/test_broadcast/broadcast.unittest",
             "args": [""],
             "stopAtEntry": true,
             "cwd": "/mnt/c/Users/jakem.JACOB-PC/Source/Lab_3/src",
