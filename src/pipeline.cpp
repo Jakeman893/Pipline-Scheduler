@@ -384,21 +384,26 @@ void pipe_cycle_broadcast(Pipeline *p){
 void pipe_cycle_commit(Pipeline *p) {
     int ii = 0;
 
-    // TODO: check the head of the ROB. If ready commit (update stats)
-    // TODO: Deallocate entry from ROB
-    // TODO: Update RAT after checking if the mapping is still valid
-
-    // DUMMY CODE (for compiling, and ensuring simulation terminates!)
-    for(ii=0; ii<PIPE_WIDTH; ii++){
-        if(p->FE_latch[ii].valid){
-            if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
-                p->halt=true;
-            }else{
-                p->stat_retired_inst++;
-                p->FE_latch[ii].valid=false;
-            }
-        }
+    // Check the head of the ROB. If ready commit (update stats)
+    if(ROB_check_head(p->pipe_ROB)) {
+        // Deallocate entry from ROB
+        Inst_Info head = ROB_remove_head(p->pipe_ROB);
+        // Update RAT after checking if the mapping is still valid
+        if(RAT_get_remap(p->pipe_RAT, head.dest_reg) == head.dr_tag)
+            RAT_reset_entry(p->pipe_RAT, head.dest_reg);
     }
+
+    // // DUMMY CODE (for compiling, and ensuring simulation terminates!)
+    // for(ii=0; ii<PIPE_WIDTH; ii++){
+    //     if(p->FE_latch[ii].valid){
+    //         if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
+    //             p->halt=true;
+    //         }else{
+    //             p->stat_retired_inst++;
+    //             p->FE_latch[ii].valid=false;
+    //         }
+    //     }
+    // }
 }
   
 //--------------------------------------------------------------------//
