@@ -87,7 +87,10 @@ void ROB_mark_ready(ROB *t, Inst_Info inst){
         entry = &t->ROB_Entries[i];
         // match inst_num with an entry
         if(entry->inst.inst_num == inst.inst_num && entry->valid)
+        {
+            entry->inst = inst;
             entry->ready = true;
+        }
     }
 }
 

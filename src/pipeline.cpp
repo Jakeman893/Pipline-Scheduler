@@ -146,10 +146,10 @@ void pipe_print_state(Pipeline *p){
      }
      printf("\n");
       
-     RAT_print_state(p->pipe_RAT);
-     REST_print_state(p->pipe_REST);
-     EXEQ_print_state(p->pipe_EXEQ);
-     ROB_print_state(p->pipe_ROB);
+    // RAT_print_state(p->pipe_RAT);
+    // REST_print_state(p->pipe_REST);
+    // EXEQ_print_state(p->pipe_EXEQ);
+    // ROB_print_state(p->pipe_ROB);
 }
 
 
@@ -169,6 +169,7 @@ void pipe_cycle(Pipeline *p)
     pipe_cycle_decode(p);
     pipe_cycle_fetch(p);
 
+    pipe_print_state(p);
 }
 
 //--------------------------------------------------------------------//
@@ -272,10 +273,16 @@ void pipe_cycle_exe(Pipeline *p){
  **********************************************************************/
 
 void pipe_cycle_rename(Pipeline *p){
-    int i;
+    int i = 0;
     // Iterate over all entries in pipe_width
-    for(i = 0; i < PIPE_WIDTH; i++) {
+    for(; i < PIPE_WIDTH; i++) {
         Pipe_Latch* latch = &p->ID_latch[i];
+        // Do nothing if the latch is invalid
+        if(!latch->valid)
+            continue;
+        
+        // Consume instruction from ID_latch
+        latch->valid = false;
         // TODO: If src1/src2 is remapped set src1tag, src2tag
         latch->inst.src1_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src1_reg);
         latch->inst.src2_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src2_reg);
@@ -287,7 +294,7 @@ void pipe_cycle_rename(Pipeline *p){
             int res = ROB_insert(p->pipe_ROB, latch->inst);
             latch->inst.dr_tag = res;
             RAT_set_remap(p->pipe_RAT, latch->inst.dest_reg, res);
-            REST_insert(p->pipe_REST, latch->inst);           
+            REST_insert(p->pipe_REST, latch->inst);    
         } else {
             p->ID_latch[i].stall = true;
             continue;
@@ -346,12 +353,16 @@ void pipe_cycle_schedule(Pipeline *p){
         if(choose) {
             REST_schedule(p->pipe_REST, choose->inst);
             // Else send it out and mark it as scheduled
+            if(!choose->scheduled && 
+                RAT_get_remap(p->pipe_RAT, choose->inst.src1_reg) != choose->inst.src1_tag &&
+                RAT_get_remap(p->pipe_RAT, choose->inst.src2_reg) != choose->inst.src2_tag)
+                choose->scheduled = true;
             p->SC_latch[j].inst = choose->inst;
             p->SC_latch[j].stall = !choose->scheduled;
             p->SC_latch[j].valid = choose->scheduled;
         } else {
             p->SC_latch[j].valid = false;
-            p->SC_latch[j].stall = true;
+            // p->SC_latch[j].stall = true;
         }
     }
 }
@@ -384,13 +395,21 @@ void pipe_cycle_broadcast(Pipeline *p){
 void pipe_cycle_commit(Pipeline *p) {
     int ii = 0;
 
-    // Check the head of the ROB. If ready commit (update stats)
-    if(ROB_check_head(p->pipe_ROB)) {
-        // Deallocate entry from ROB
-        Inst_Info head = ROB_remove_head(p->pipe_ROB);
-        // Update RAT after checking if the mapping is still valid
-        if(RAT_get_remap(p->pipe_RAT, head.dest_reg) == head.dr_tag)
-            RAT_reset_entry(p->pipe_RAT, head.dest_reg);
+    for(; ii < PIPE_WIDTH; ii++) {
+        // Check the head of the ROB. If ready commit (update stats)
+        if(ROB_check_head(p->pipe_ROB)) {
+            // Deallocate entry from ROB
+            Inst_Info head = ROB_remove_head(p->pipe_ROB);
+            // Update RAT after checking if the mapping is still valid
+            if(RAT_get_remap(p->pipe_RAT, head.dest_reg) == head.dr_tag)
+                RAT_reset_entry(p->pipe_RAT, head.dest_reg);
+            ++p->stat_retired_inst;
+        }
+        if(p->FE_latch[ii].valid){
+            if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
+                p->halt=true;
+            }
+        }
     }
 
     // // DUMMY CODE (for compiling, and ensuring simulation terminates!)

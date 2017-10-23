@@ -55,6 +55,8 @@ int  RAT_get_remap(RAT *t, int arf_id){
 /////////////////////////////////////////////////////////////
 
 void RAT_set_remap(RAT *t, int arf_id, int prf_id){
+    if(arf_id == -1)
+        return;
     // Retrieve entry from RAT
     RAT_Entry* entry = &t->RAT_Entries[arf_id];
     // Update with passed in physical register file id and

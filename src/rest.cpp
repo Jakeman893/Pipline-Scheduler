@@ -79,6 +79,8 @@ void  REST_insert(REST *t, Inst_Info inst){
             entry->valid = true;
             entry->scheduled = false;
             entry->inst = inst;
+            entry->inst.src1_ready = entry->inst.src1_tag == -1;
+            entry->inst.src2_ready = entry->inst.src2_tag == -1;
             return;
         }
     }

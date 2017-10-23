@@ -36,7 +36,7 @@
             "name": "C++ Launch (Remote Local)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "../tests/test_rename/rename.unittest",
+            "program": "sim",
             "args": [""],
             "miDebuggerServerAddress": "10.0.1.201:9091",
             "stopAtEntry": false,
