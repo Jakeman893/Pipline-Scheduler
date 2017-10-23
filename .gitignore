@@ -32,3 +32,5 @@
 *.app
 *.unittest
 src/sim
+src/result*
+results/

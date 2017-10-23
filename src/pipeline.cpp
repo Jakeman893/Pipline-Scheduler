@@ -169,7 +169,10 @@ void pipe_cycle(Pipeline *p)
     pipe_cycle_decode(p);
     pipe_cycle_fetch(p);
 
-    pipe_print_state(p);
+    // printf("Inst:\t%d\nDest:\t%d\nSrc1:\t%d\nSrc2:\t%d\n", 
+    //        p->FE_latch[0].inst.inst_num, p->FE_latch[0].inst.dest_reg,
+    //        p->FE_latch[0].inst.src1_reg, p->FE_latch[0].inst.src2_reg);
+    // pipe_print_state(p);
 }
 
 //--------------------------------------------------------------------//
@@ -281,24 +284,9 @@ void pipe_cycle_rename(Pipeline *p){
         if(!latch->valid)
             continue;
         
-        // Consume instruction from ID_latch
-        latch->valid = false;
         // TODO: If src1/src2 is remapped set src1tag, src2tag
         latch->inst.src1_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src1_reg);
         latch->inst.src2_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src2_reg);
-
-
-        if(ROB_check_space(p->pipe_ROB) && REST_check_space(p->pipe_REST))
-        {
-            // TODO: Find space in ROB and set drtag as such if successful
-            int res = ROB_insert(p->pipe_ROB, latch->inst);
-            latch->inst.dr_tag = res;
-            RAT_set_remap(p->pipe_RAT, latch->inst.dest_reg, res);
-            REST_insert(p->pipe_REST, latch->inst);    
-        } else {
-            p->ID_latch[i].stall = true;
-            continue;
-        }
 
         // TODO: If src1/src2 is not remapped marked as src ready
         if(latch->inst.src1_tag == -1)
@@ -307,9 +295,31 @@ void pipe_cycle_rename(Pipeline *p){
             latch->inst.src2_ready = true;
         // TODO: If src1/src2 remapped and the ROB (tag) is ready then mark src ready
         if(ROB_check_ready(p->pipe_ROB, latch->inst.src1_tag))
+        {
             latch->inst.src1_ready = true;
+            latch->inst.src1_tag = -1;
+        }
         if(ROB_check_ready(p->pipe_ROB, latch->inst.src2_tag))
+        {
             latch->inst.src2_ready = true;
+            latch->inst.src2_tag = -1;
+        }
+
+        if(ROB_check_space(p->pipe_ROB) && REST_check_space(p->pipe_REST))
+        {
+            // TODO: Find space in ROB and set drtag as such if successful
+            int res = ROB_insert(p->pipe_ROB, latch->inst);
+            latch->inst.dr_tag = res;
+            RAT_set_remap(p->pipe_RAT, latch->inst.dest_reg, res);
+            REST_insert(p->pipe_REST, latch->inst);    
+            // Consume instruction from ID_latch
+            latch->valid = false;
+            latch->stall = false;
+        } else {
+            latch->stall = true;
+            continue;
+        }
+
         // FIXME: If there is stall, we should not do rename and ROB alloc twice
     }
 }
@@ -321,7 +331,7 @@ void pipe_cycle_schedule(Pipeline *p){
     // TODO: Implement two scheduling policies (SCHED_POLICY: 0 and 1)
     for(int j = 0; j < PIPE_WIDTH; j++) {
         REST_Entry* tmp;
-        uint64_t min_inst_num = 0xFFFF;
+        uint64_t min_inst_num = 0xFFFFFFFFFFFFFFFF;
         REST_Entry* choose = NULL;
         if(SCHED_POLICY==0){
             // inorder scheduling
@@ -353,10 +363,6 @@ void pipe_cycle_schedule(Pipeline *p){
         if(choose) {
             REST_schedule(p->pipe_REST, choose->inst);
             // Else send it out and mark it as scheduled
-            if(!choose->scheduled && 
-                RAT_get_remap(p->pipe_RAT, choose->inst.src1_reg) != choose->inst.src1_tag &&
-                RAT_get_remap(p->pipe_RAT, choose->inst.src2_reg) != choose->inst.src2_tag)
-                choose->scheduled = true;
             p->SC_latch[j].inst = choose->inst;
             p->SC_latch[j].stall = !choose->scheduled;
             p->SC_latch[j].valid = choose->scheduled;
@@ -383,6 +389,7 @@ void pipe_cycle_broadcast(Pipeline *p){
                 REST_remove(p->pipe_REST, latched->inst);
                 // TODO: Update the ROB, mark ready, and update Inst Info in ROB
                 ROB_mark_ready(p->pipe_ROB, latched->inst);
+                latched->valid = false;
             }
         }
     }
@@ -403,9 +410,11 @@ void pipe_cycle_commit(Pipeline *p) {
             // Update RAT after checking if the mapping is still valid
             if(RAT_get_remap(p->pipe_RAT, head.dest_reg) == head.dr_tag)
                 RAT_reset_entry(p->pipe_RAT, head.dest_reg);
+            REST_remove(p->pipe_REST, head);
             ++p->stat_retired_inst;
-        }
-        if(p->FE_latch[ii].valid){
+        } else if(p->FE_latch[ii].valid){
+            if(p->SC_latch[ii].valid)
+                continue;
             if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
                 p->halt=true;
             }
