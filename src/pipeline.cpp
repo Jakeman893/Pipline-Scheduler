@@ -169,10 +169,10 @@ void pipe_cycle(Pipeline *p)
     pipe_cycle_decode(p);
     pipe_cycle_fetch(p);
 
-    // printf("Inst:\t%d\nDest:\t%d\nSrc1:\t%d\nSrc2:\t%d\n", 
-    //        p->FE_latch[0].inst.inst_num, p->FE_latch[0].inst.dest_reg,
-    //        p->FE_latch[0].inst.src1_reg, p->FE_latch[0].inst.src2_reg);
-    // pipe_print_state(p);
+    printf("Inst:\t%d\nDest:\t%d\nSrc1:\t%d\nSrc2:\t%d\n", 
+           p->FE_latch[0].inst.inst_num, p->FE_latch[0].inst.dest_reg,
+           p->FE_latch[0].inst.src1_reg, p->FE_latch[0].inst.src2_reg);
+    pipe_print_state(p);
 }
 
 //--------------------------------------------------------------------//
@@ -236,9 +236,9 @@ void pipe_cycle_exe(Pipeline *p){
         p->EX_latch[ii].valid = true;
         p->SC_latch[ii].valid = false; 
       }
-      return;
     }
-  }
+    return;
+}
   
   //---------Handling exe for multicycle operations is complex, and uses EXEQ
   
@@ -377,20 +377,18 @@ void pipe_cycle_schedule(Pipeline *p){
 //--------------------------------------------------------------------//
 
 void pipe_cycle_broadcast(Pipeline *p){
-    for(int j = 0; j < PIPE_WIDTH; j++) {
-        // TODO: Go through all instructions out of EXE latch
-        for(int i = 0; i < MAX_BROADCASTS; i++) {
-            Pipe_Latch* latched = &p->EX_latch[i];
-            if(latched->valid)
-            {
-                // TODO: Broadcast it to REST (using wakeup function)
-                REST_wakeup(p->pipe_REST, latched->inst.dr_tag);
-                // TODO: Remove entry from REST (using inst_num)
-                REST_remove(p->pipe_REST, latched->inst);
-                // TODO: Update the ROB, mark ready, and update Inst Info in ROB
-                ROB_mark_ready(p->pipe_ROB, latched->inst);
-                latched->valid = false;
-            }
+    // TODO: Go through all instructions out of EXE latch
+    for(int i = 0; i < MAX_BROADCASTS; i++) {
+        Pipe_Latch* latched = &p->EX_latch[i];
+        if(latched->valid)
+        {
+            // TODO: Broadcast it to REST (using wakeup function)
+            REST_wakeup(p->pipe_REST, latched->inst.dr_tag);
+            // TODO: Remove entry from REST (using inst_num)
+            REST_remove(p->pipe_REST, latched->inst);
+            // TODO: Update the ROB, mark ready, and update Inst Info in ROB
+            ROB_mark_ready(p->pipe_ROB, latched->inst);
+            latched->valid = false;
         }
     }
 }
