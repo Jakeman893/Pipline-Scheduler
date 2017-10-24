@@ -12,6 +12,9 @@ all: $(A_SRC_LOC) rat.unittest
 rat.unittest: $(A_OBJS) ../../src/rat.h
 	g++ rat_unittest.cpp -lgtest -lgtest_main -lpthread $^ -o $@
 
+rat.unittest.debug: $(A_OBJS) ../../src/rat.h
+	g++ -g rat_unittest.cpp -lgtest -lgtest_main -lpthread $^ -o $@
+
 clean:
 	rm rat.unittest
 	rm $(A_OBJS)

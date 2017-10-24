@@ -58,6 +58,54 @@ TEST(RestTest, InsertInstruction) {
     delete t;
 }
 
+// Test that inserting non-mapped instruction gives ready state
+TEST(RestTest, InsertReadyInstruction) {
+    REST *t = REST_init();
+    Inst_Info mockInst;
+    mockInst.src1_tag = -1;
+    mockInst.src2_tag = -1;
+    REST_insert(t, mockInst);
+    EXPECT_TRUE(t->REST_Entries[0].inst.src1_ready);
+    EXPECT_TRUE(t->REST_Entries[0].inst.src2_ready);
+    delete t;
+}
+
+// Test that inserting non-mapped instruction gives ready state
+TEST(RestTest, InsertSrc1ReadyInstruction) {
+    REST *t = REST_init();
+    Inst_Info mockInst;
+    mockInst.src1_tag = -1;
+    mockInst.src2_tag = 5;
+    REST_insert(t, mockInst);
+    EXPECT_TRUE(t->REST_Entries[0].inst.src1_ready);
+    EXPECT_FALSE(t->REST_Entries[0].inst.src2_ready);
+    delete t;
+}
+
+// Test that inserting non-mapped instruction gives ready state
+TEST(RestTest, InsertSrc2ReadyInstruction) {
+    REST *t = REST_init();
+    Inst_Info mockInst;
+    mockInst.src1_tag = 1;
+    mockInst.src2_tag = -1;
+    REST_insert(t, mockInst);
+    EXPECT_FALSE(t->REST_Entries[0].inst.src1_ready);
+    EXPECT_TRUE(t->REST_Entries[0].inst.src2_ready);
+    delete t;
+}
+
+// Test that inserting non-mapped instruction gives ready state
+TEST(RestTest, InsertNoReadyInstruction) {
+    REST *t = REST_init();
+    Inst_Info mockInst;
+    mockInst.src1_tag = 1;
+    mockInst.src2_tag = 4;
+    REST_insert(t, mockInst);
+    EXPECT_FALSE(t->REST_Entries[0].inst.src1_ready);
+    EXPECT_FALSE(t->REST_Entries[0].inst.src2_ready);
+    delete t;
+}
+
 // Test that REST check space returns true when space is available
 TEST(RestTest, CheckSpacePartFull) {
     REST *t = REST_init();

@@ -58,7 +58,7 @@ bool ROB_check_space(ROB *t){
 int ROB_insert(ROB *t, Inst_Info inst){
     // Check if space available
     if(!ROB_check_space(t))
-        return 0;
+        return -1;
 
     // Insert at tail
     ROB_Entry *entry = &t->ROB_Entries[t->tail_ptr];
@@ -66,10 +66,12 @@ int ROB_insert(ROB *t, Inst_Info inst){
     entry->valid = true;
     entry->ready = false;
 
+    // Save the current index to return
+    int idx = t->tail_ptr;
     // Increment tail, wrapping if necessary
     ++t->tail_ptr;
     t->tail_ptr %= NUM_ROB_ENTRIES;
-    return 1;
+    return idx;
 }
 
 /////////////////////////////////////////////////////////////
@@ -77,17 +79,18 @@ int ROB_insert(ROB *t, Inst_Info inst){
 /////////////////////////////////////////////////////////////
 
 void ROB_mark_ready(ROB *t, Inst_Info inst){
-    // Iterate through table starting at head_ptr
-    int i = 1;
-    int idx = NUM_ROB_ENTRIES;
+    // Iterate through table starting at 0
+    int i = 0;
     ROB_Entry *entry = NULL;
-    for(; idx != t->tail_ptr; i++)
+    for(; i <= NUM_ROB_ENTRIES; i++)
     {
-        idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
-        entry = &t->ROB_Entries[idx];
+        entry = &t->ROB_Entries[i];
         // match inst_num with an entry
         if(entry->inst.inst_num == inst.inst_num && entry->valid)
+        {
+            entry->inst = inst;
             entry->ready = true;
+        }
     }
 }
 
@@ -98,14 +101,12 @@ void ROB_mark_ready(ROB *t, Inst_Info inst){
 bool ROB_check_ready(ROB *t, int tag){
     // look for tag in ROB and return if th ROB entry is ready
     int i = 0;
-    int idx;
     ROB_Entry *entry = NULL;
-    for(; i != t->tail_ptr; i++)
+    for(; i <= NUM_ROB_ENTRIES; i++)
     {
-        idx = (t->head_ptr + i) % NUM_ROB_ENTRIES;
-        entry = &t->ROB_Entries[idx];
+        entry = &t->ROB_Entries[i];
         // Match tag with an entry
-        if(entry->inst.src1_tag == tag || entry->inst.src2_tag == tag)
+        if(entry->inst.dr_tag == tag && entry->valid)
             return entry->ready;
     }
     return false;

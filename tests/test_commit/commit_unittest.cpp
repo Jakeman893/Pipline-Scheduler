@@ -30,69 +30,65 @@
 #include <stdio.h>
 
 #include "gtest/gtest.h"
-#include "../../src/rat.h"
+#include "../../src/pipeline.h"
 
-// Test That making instance works correctly
-TEST(RatTest, MakeInstance) {
-    RAT *rat = RAT_init();
-    EXPECT_FALSE(rat == NULL);
-    delete rat;
+int32_t  PIPE_WIDTH=1;
+int32_t   NUM_REST_ENTRIES=16;
+int32_t   NUM_ROB_ENTRIES=16;
+int32_t   LOAD_EXE_CYCLES=4;
+int32_t   SCHED_POLICY=0;
+
+Inst_Info mockInst;
+
+Pipeline *t;
+
+// The order of the REST instructions
+int order[] = {0, 1, 3, 4, 9, 2, 6, 8, 5, 7};
+
+// Test initialization of pipeline function
+TEST(InOrderTest, InitFunct) {
+    t = pipe_init(NULL);
+    EXPECT_FALSE(t == NULL);
 }
 
-// Test that when retrieving from empty RAT,
-//  the retrieved value is equal to value given
-TEST(RatTest, RetrieveEmptyRat) {
-    RAT *rat = RAT_init();
-    int reg = RAT_get_remap(rat, 1);
-    EXPECT_EQ(-1, reg);
-    delete rat;
-}
-
-// Test that when RAT has value set, the RAT returns
-//  mapped register.
-TEST(RatTest, SetRatEntry) {
-    RAT *rat = RAT_init();
-    RAT_set_remap(rat, 1, 5);
-    int reg = RAT_get_remap(rat, 1);
-    EXPECT_EQ(reg, 5);
-    delete rat;
-}
-
-// Test that when RAT has value reset, the RAT returns
-//  the passed value
-TEST(RatTest, ResetRatEntry) {
-    RAT *rat = RAT_init();
-    RAT_set_remap(rat, 1, 5);
-    int reg = RAT_get_remap(rat, 1);
-    EXPECT_EQ(reg, 5);
-    RAT_reset_entry(rat, 1);
-    reg = RAT_get_remap(rat, 1);
-    EXPECT_EQ(-1, reg);
-}
-
-// Test when all values set in RAT, all valid bits true
-TEST(RatTest, ValidBitTest) {
-    RAT *rat = RAT_init();
-    int i = 0;
-    for(;i < MAX_ARF_REGS;i++)
-    {
-        RAT_set_remap(rat, i, i * 5);
-        EXPECT_TRUE(rat->RAT_Entries[i].valid);
+// Check when REST empty
+TEST(CommitTest, EmptyStructsCheck) {
+    pipe_cycle_broadcast(t);
+    EXPECT_FALSE(t->EX_latch[0].valid);
+    // Fill structs for other tests
+    int res;
+    for(int i = 0; i < NUM_REST_ENTRIES; i++) {
+        mockInst.inst_num = i;
+        mockInst.dest_reg = i % 8;
+        mockInst.src1_reg = i % 4;
+        mockInst.src1_tag = -1;
+        mockInst.src2_reg = (i % 2) + 1;
+        mockInst.src2_tag = -1;
+        res = ROB_insert(t->pipe_ROB, mockInst);
+        mockInst.dr_tag = res;
+        RAT_set_remap(t->pipe_RAT, mockInst.dest_reg, res);
+        REST_insert(t->pipe_REST, mockInst);
     }
 }
 
-// Test that prf_id is set when remapping
-TEST(RatTest, PRFTest) {
-    RAT *rat = RAT_init();
-    int i = 0;
-    for(;i < MAX_ARF_REGS;i++)
-    {
-        RAT_set_remap(rat, i, i * 5);
-        EXPECT_EQ(rat->RAT_Entries[i].prf_id, i * 5);
-    }
+// Check that valid instruction updates REST and ROB correctly
+TEST(CommitTest, ValidInstUpdate) {
+    mockInst.inst_num = 0;
+    mockInst.dest_reg = 0;
+    mockInst.src1_reg = 0;
+    mockInst.src2_reg = 1;
+    mockInst.dr_tag = 0;
+    Pipe_Latch* ex = &t->EX_latch[0];
+    ex->valid = true;
+    ex->stall = false;
+    ex->inst = mockInst;
+    pipe_cycle_commit(t);
+    EXPECT_TRUE(REST_check_space(t->pipe_REST));
+    EXPECT_TRUE(ROB_check_ready(t->pipe_ROB, mockInst.dr_tag));
 }
 
 GTEST_API_ int main(int argc, char **argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+    delete t;
 }

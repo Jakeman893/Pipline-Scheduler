@@ -31,3 +31,7 @@
 *.out
 *.app
 *.unittest
+src/sim
+src/result*
+results/
+src/report.txt
