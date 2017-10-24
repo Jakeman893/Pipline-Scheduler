@@ -8,7 +8,7 @@
 #include "pipeline.h"
 #include <cstdlib>
 #include <cstring>
-
+#include <algorithm>
 
 extern int32_t PIPE_WIDTH;
 extern int32_t SCHED_POLICY;
@@ -275,8 +275,21 @@ void pipe_cycle_exe(Pipeline *p){
  * -----------  DO NOT MODIFY THE CODE ABOVE THIS LINE ----------------
  **********************************************************************/
 
+bool num_comp(Pipe_Latch const &a, Pipe_Latch const &b)
+{
+    if(a.inst.inst_num == 0) return false;
+    if(b.inst.inst_num == 0) return false;
+    return a.inst.inst_num < b.inst.inst_num;
+}
+
 void pipe_cycle_rename(Pipeline *p){
     int i = 0;
+    // make sure ID latch is served in order
+    if(PIPE_WIDTH > 0) {
+        std::sort(p->ID_latch,
+                  p->ID_latch + PIPE_WIDTH,
+                  num_comp);
+    }
     // Iterate over all entries in pipe_width
     for(; i < PIPE_WIDTH; i++) {
         Pipe_Latch* latch = &p->ID_latch[i];
@@ -284,16 +297,16 @@ void pipe_cycle_rename(Pipeline *p){
         if(!latch->valid)
             continue;
         
-        // TODO: If src1/src2 is remapped set src1tag, src2tag
+        // If src1/src2 is remapped set src1tag, src2tag
         latch->inst.src1_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src1_reg);
         latch->inst.src2_tag = RAT_get_remap(p->pipe_RAT, latch->inst.src2_reg);
 
-        // TODO: If src1/src2 is not remapped marked as src ready
+        // If src1/src2 is not remapped marked as src ready
         if(latch->inst.src1_tag == -1)
             latch->inst.src1_ready = true;
         if(latch->inst.src2_tag == -1)
             latch->inst.src2_ready = true;
-        // TODO: If src1/src2 remapped and the ROB (tag) is ready then mark src ready
+        // If src1/src2 remapped and the ROB (tag) is ready then mark src ready
         if(ROB_check_ready(p->pipe_ROB, latch->inst.src1_tag))
         {
             latch->inst.src1_ready = true;
@@ -307,7 +320,7 @@ void pipe_cycle_rename(Pipeline *p){
 
         if(ROB_check_space(p->pipe_ROB) && REST_check_space(p->pipe_REST))
         {
-            // TODO: Find space in ROB and set drtag as such if successful
+            // Find space in ROB and set drtag as such if successful
             int res = ROB_insert(p->pipe_ROB, latch->inst);
             latch->inst.dr_tag = res;
             RAT_set_remap(p->pipe_RAT, latch->inst.dest_reg, res);
@@ -328,7 +341,7 @@ void pipe_cycle_rename(Pipeline *p){
 
 void pipe_cycle_schedule(Pipeline *p){
 
-    // TODO: Implement two scheduling policies (SCHED_POLICY: 0 and 1)
+    // Implement two scheduling policies (SCHED_POLICY: 0 and 1)
     for(int j = 0; j < PIPE_WIDTH; j++) {
         REST_Entry* tmp;
         uint64_t min_inst_num = 0xFFFFFFFFFFFFFFFF;
@@ -377,16 +390,16 @@ void pipe_cycle_schedule(Pipeline *p){
 //--------------------------------------------------------------------//
 
 void pipe_cycle_broadcast(Pipeline *p){
-    // TODO: Go through all instructions out of EXE latch
+    // Go through all instructions out of EXE latch
     for(int i = 0; i < MAX_BROADCASTS; i++) {
         Pipe_Latch* latched = &p->EX_latch[i];
         if(latched->valid)
         {
-            // TODO: Broadcast it to REST (using wakeup function)
+            // Broadcast it to REST (using wakeup function)
             REST_wakeup(p->pipe_REST, latched->inst.dr_tag);
-            // TODO: Remove entry from REST (using inst_num)
+            // Remove entry from REST (using inst_num)
             REST_remove(p->pipe_REST, latched->inst);
-            // TODO: Update the ROB, mark ready, and update Inst Info in ROB
+            // Update the ROB, mark ready, and update Inst Info in ROB
             ROB_mark_ready(p->pipe_ROB, latched->inst);
             latched->valid = false;
         }
