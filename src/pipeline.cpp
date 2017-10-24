@@ -169,10 +169,10 @@ void pipe_cycle(Pipeline *p)
     pipe_cycle_decode(p);
     pipe_cycle_fetch(p);
 
-    printf("Inst:\t%d\nDest:\t%d\nSrc1:\t%d\nSrc2:\t%d\n", 
-           p->FE_latch[0].inst.inst_num, p->FE_latch[0].inst.dest_reg,
-           p->FE_latch[0].inst.src1_reg, p->FE_latch[0].inst.src2_reg);
-    pipe_print_state(p);
+    // printf("Inst:\t%d\nDest:\t%d\nSrc1:\t%d\nSrc2:\t%d\n", 
+    //        p->FE_latch[0].inst.inst_num, p->FE_latch[0].inst.dest_reg,
+    //        p->FE_latch[0].inst.src1_reg, p->FE_latch[0].inst.src2_reg);
+    // pipe_print_state(p);
 }
 
 //--------------------------------------------------------------------//
