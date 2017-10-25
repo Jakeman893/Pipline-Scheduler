@@ -4,10 +4,10 @@ SIM_OBJS = $(SIM_SRC:.cpp=.o)
 all: $(SIM_SRC) sim
 
 %.o: %.cpp
-	g++ -g -Wall -c -o $@ $<  
+	g++ -Wall -c -o $@ $<  
 
 sim: $(SIM_OBJS) 
-	g++ -g -Wall -o $@ $^
+	g++ -Wall -o $@ $^
 
 clean: 
 	rm sim *.o
