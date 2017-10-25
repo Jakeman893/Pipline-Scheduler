@@ -423,26 +423,10 @@ void pipe_cycle_commit(Pipeline *p) {
                 RAT_reset_entry(p->pipe_RAT, head.dest_reg);
             REST_remove(p->pipe_REST, head);
             ++p->stat_retired_inst;
-        } else if(p->FE_latch[ii].valid){
-            if(p->SC_latch[ii].valid)
-                continue;
-            if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
+            if(head.inst_num >= p->halt_inst_num)
                 p->halt=true;
-            }
         }
     }
-
-    // // DUMMY CODE (for compiling, and ensuring simulation terminates!)
-    // for(ii=0; ii<PIPE_WIDTH; ii++){
-    //     if(p->FE_latch[ii].valid){
-    //         if(p->FE_latch[ii].inst.inst_num >= p->halt_inst_num){
-    //             p->halt=true;
-    //         }else{
-    //             p->stat_retired_inst++;
-    //             p->FE_latch[ii].valid=false;
-    //         }
-    //     }
-    // }
 }
   
 //--------------------------------------------------------------------//
